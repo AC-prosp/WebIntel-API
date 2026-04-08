@@ -14,7 +14,7 @@ No scraping setup. No infrastructure.
 
 ### 1. Get your API key
 
-Visit: https://yourdomain.com/get-api-key
+Visit: https://webintel.io
 
 Free credits included.
 
