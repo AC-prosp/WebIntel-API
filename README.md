@@ -1,187 +1,93 @@
-# WebIntel-API
-Detect website changes, extract data, and evaluate content in a single API.
-## 🚀 What it does
+# Competitor Price Monitoring API
 
-WebIntel API lets you:
+Track competitor price and product changes in real time and trigger automated actions.
 
-* Monitor website changes
-* Extract structured data (price, company, emails, etc.)
-* Score how fresh or outdated content is
+## Overview
 
-No scraping setup. No infrastructure.
+Competitors change prices, stock, and product listings constantly. Reacting late can cost revenue.
 
-## ⚡ Quick Start
+This API monitors product pages and detects meaningful changes such as price updates and availability changes. It returns structured data and can trigger webhooks so your systems can respond immediately.
 
-### 1. Get your API key
+## Features
 
-Visit: https://webintel.io
+- Detect price drops and increases
+- Monitor stock availability changes
+- Structured JSON output
+- Webhook support for real-time automation
+- Designed for developers and automation systems
+- Fast and reliable monitoring
 
-Free credits included.
-
----
-
-### 2. Make a request
-
-POST /run-task
+## Example Response
 
 ```json
 {
-  "api_key": "your_api_key",
-  "task": "detect_change",
-  "payload": {
-    "url": "https://example.com"
-  }
+  "change_type": "price_drop",
+  "product_name": "Running Shoes X",
+  "old_price": 120,
+  "new_price": 95,
+  "percentage_change": 21,
+  "ai_summary": "Price dropped significantly, likely a promotion",
+  "timestamp": "2026-04-15T10:00:00Z"
 }
-```
 
----
-
-### 3. Example response
-
-```json
+Quick start
+1. Create a monitor
+POST /api/monitors
 {
-  "success": true,
-  "task": "detect_change",
-  "data": {
-    "changed": true,
-    "summary": "Pricing updated"
-  },
-  "credits_used": 1,
-  "credits_remaining": 99
+  "url": "https://example.com/product",
+  "type": "product",
+  "check_interval_minutes": 10
 }
-```
+
+2. (Optional) Add a webhook
+Receive updates automatically when a change is detected.
+
+3. Get changes
+GET /api/changes/latest
+
+Use cases:
+Track competitor pricing
+React instantly to price drops
+Monitor stock availability
+Automate pricing decisions
+Power internal tools or AI agents
+
+How it works:
+Add a product URL
+The system extracts structured data
+Changes are detected and classified
+Results are returned via API or sent via webhook
+
+Design goals:
+Detect meaningful changes, not noise
+Provide clean, structured data
+Be easy to integrate
+Enable automation, not just alerts
+
+Limitations:
+Accuracy depends on page structure
+Some dynamic pages may be harder to parse
+Detection improves over time
+
+License:
+MIT
 
 ---
 
-## 🧠 Supported Tasks
+#  Why this version is better
 
-### detect_change
-
-Checks if a webpage has changed.
-
----
-
-### extract_data
-
-Extract structured fields from a page.
-
-```json
-{
-  "task": "extract_data",
-  "payload": {
-    "url": "https://example.com",
-    "fields": ["price", "company"]
-  }
-}
-```
+- Shorter → higher engagement  
+- Quick start is immediate  
+- No fluff sections devs ignore  
+- Clear use cases  
+- Honest limitations (builds trust)
 
 ---
 
-### freshness_score
+#  One optional upgrade (high impact)
 
-Evaluates how up-to-date content is.
+At the very top, you can add:
 
----
+```md
+Simple API to detect competitor price changes and trigger actions.
 
-## 🧪 Try it instantly (no code)
-
-Use the UI:
-https://yourdomain.com/try-api
-
-* Enter API key
-* Enter URL
-* Select task
-* Get result instantly
-
----
-
-## 💰 Pricing
-
-* Free: 100 credits
-* Pay-as-you-go (no subscription)
-
-Example:
-
-* 1,000 credits → £10
-* 5,000 credits → £30
-* 20,000 credits → £79
-
----
-
-## 📦 Batch Requests
-
-Run multiple tasks in one call:
-
-```json
-{
-  "api_key": "your_api_key",
-  "tasks": [
-    { "task": "detect_change", "payload": { "url": "..." } },
-    { "task": "extract_data", "payload": { "url": "...", "fields": ["price"] } }
-  ]
-}
-```
-
----
-
-## ❌ Errors
-
-```json
-{ "error": "invalid_api_key" }
-```
-
-```json
-{ "error": "no_credits" }
-```
-
----
-
-## 🧠 Why use WebIntel?
-
-Instead of building:
-
-* scrapers
-* diffing logic
-* parsing systems
-
-Use one API.
-
----
-
-## 🔗 Links
-
-* Docs: https://yourdomain.com/docs
-* Get API Key: https://yourdomain.com/get-api-key
-* Try UI: https://yourdomain.com/try-api
-
----
-
-## 💡 Use Cases
-
-* Competitor monitoring
-* Price tracking
-* SEO tracking
-* Job listing alerts
-* Content change alerts
-
----
-
-## ⚡ Notes
-
-* No login required
-* API key = access
-* Credits deducted per request
-
----
-
-## 🛠 Built for
-
-* Developers
-* Automation tools
-* AI agents
-
----
-
-## 📬 Feedback
-
-Open an issue or reach out — happy to give extra credits to early users.
