@@ -16,6 +16,19 @@ await client.subscribe({
   events: ["price_drop"]
 });
 
+## Why this exists
+
+Most tools either:
+
+* return raw scraped data
+* or trigger alerts on every minor change
+
+Webintel focuses on:
+
+→ meaningful events only
+→ clean structured output
+→ ready for automation
+
 
 Real-time price and stock change detection — delivered as clean events.
 
