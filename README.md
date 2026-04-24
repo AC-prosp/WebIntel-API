@@ -1,4 +1,24 @@
 # Webintel
+## Install in 5 seconds
+
+```bash
+npm install @acpro/webintel
+```
+
+---
+
+## Example
+
+```js
+const Webintel = require("@acpro/webintel");
+
+const client = new Webintel("YOUR_API_KEY");
+
+await client.subscribe({
+  url: "https://example.com/product",
+  events: ["price_drop"]
+});
+```
 
 ## Install
 
