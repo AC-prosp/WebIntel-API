@@ -82,6 +82,46 @@ app.get("/openapi.json", (req, res) => {
 });
 // Generate a new API key
 app.post("/v1/keys/generate", async (req, res) => {
+  const { email, plan } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: "email is required" });
+  }
+
+  const selectedPlan = plan || "pay_per_signal";
+  const validPlans = ["pay_per_signal", "starter", "pro"];
+  if (!validPlans.includes(selectedPlan)) {
+    return res.status(400).json({ error: "Invalid plan. Choose: pay_per_signal, starter, pro" });
+  }
+
+  try {
+    // Create Stripe customer
+    const customer = await getStripe().customers.create({ email });
+
+    let priceId;
+    if (selectedPlan === "starter") priceId = process.env.STRIPE_PRICE_STARTER;
+    if (selectedPlan === "pro") priceId = process.env.STRIPE_PRICE_PRO;
+    if (selectedPlan === "pay_per_signal") priceId = process.env.STRIPE_PRICE_ID;
+
+    // Create subscription
+    await getStripe().subscriptions.create({
+      customer: customer.id,
+      items: [{ price: priceId }],
+    });
+
+    // Generate API key
+    const key = "wi_" + Math.random().toString(36).substr(2, 9) + Math.random().toString(36).substr(2, 9);
+    await pool.query(
+      `INSERT INTO api_keys (key, customer_id, plan) VALUES ($1, $2, $3)`,
+      [key, customer.id, selectedPlan]
+    );
+    apiKeys[key] = { customerId: customer.id, plan: selectedPlan };
+
+    res.json({ api_key: key, plan: selectedPlan, email });
+  } catch (err) {
+    console.error("Full error:", JSON.stringify(err));
+    res.status(500).json({ error: err.message });
+  }
+});
   const { email } = req.body;
   if (!email) {
     return res.status(400).json({ error: "email is required" });
