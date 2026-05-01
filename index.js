@@ -16,12 +16,12 @@ function getStripe() {
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.static("public"));
 
 const apiKeys = {};
 
-// Load API keys from database into memory on startup
 async function loadApiKeys() {
-  const result = await pool.query(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS api_keys (
       key TEXT PRIMARY KEY,
       customer_id TEXT,
@@ -33,12 +33,10 @@ async function loadApiKeys() {
   keys.rows.forEach(row => {
     apiKeys[row.key] = { customerId: row.customer_id, plan: row.plan };
   });
-  // Always keep test key available
   apiKeys["test_key_123"] = { customerId: null, plan: "pay_per_signal" };
   console.log(`Loaded ${keys.rows.length} API keys from database`);
 }
 
-// Create tables if they don't exist
 async function initDb() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS monitors (
@@ -70,85 +68,46 @@ function requireApiKey(req, res, next) {
 }
 
 app.get("/", (req, res) => {
-  res.json({ 
-    status: "Webintel API is running",
-    docs: "https://api.webintel.io/openapi.json",
-    npm: "npm install webintel"
-  });
+  res.sendFile(__dirname + "/public/index.html");
 });
 
 app.get("/openapi.json", (req, res) => {
   res.sendFile(__dirname + "/openapi.json");
 });
-// Generate a new API key
+
 app.post("/v1/keys/generate", async (req, res) => {
   const { email, plan } = req.body;
   if (!email) {
     return res.status(400).json({ error: "email is required" });
   }
-
   const selectedPlan = plan || "pay_per_signal";
   const validPlans = ["pay_per_signal", "starter", "pro"];
   if (!validPlans.includes(selectedPlan)) {
     return res.status(400).json({ error: "Invalid plan. Choose: pay_per_signal, starter, pro" });
   }
-
   try {
-    // Create Stripe customer
     const customer = await getStripe().customers.create({ email });
-
     let priceId;
     if (selectedPlan === "starter") priceId = process.env.STRIPE_PRICE_STARTER;
     if (selectedPlan === "pro") priceId = process.env.STRIPE_PRICE_PRO;
     if (selectedPlan === "pay_per_signal") priceId = process.env.STRIPE_PRICE_ID;
-
-    // Create subscription
     await getStripe().subscriptions.create({
       customer: customer.id,
       items: [{ price: priceId }],
     });
-
-    // Generate API key
     const key = "wi_" + Math.random().toString(36).substr(2, 9) + Math.random().toString(36).substr(2, 9);
     await pool.query(
       `INSERT INTO api_keys (key, customer_id, plan) VALUES ($1, $2, $3)`,
       [key, customer.id, selectedPlan]
     );
     apiKeys[key] = { customerId: customer.id, plan: selectedPlan };
-
     res.json({ api_key: key, plan: selectedPlan, email });
   } catch (err) {
     console.error("Full error:", JSON.stringify(err));
     res.status(500).json({ error: err.message });
   }
 });
-  const { email } = req.body;
-  if (!email) {
-    return res.status(400).json({ error: "email is required" });
-  }
-  try {
-    // Create a Stripe customer
-    const customer = await getStripe().customers.create({ email });
 
-    // Create a Stripe subscription for pay-per-signal
-    await getStripe().subscriptions.create({
-      customer: customer.id,
-      items: [{ price: process.env.STRIPE_PRICE_ID }],
-    });
-
-    // Generate API key and store with Stripe customer ID
-    const key = "wi_" + Math.random().toString(36).substr(2, 9) + Math.random().toString(36).substr(2, 9);
-    await pool.query(
-      `INSERT INTO api_keys (key, customer_id, plan) VALUES ($1, $2, $3)`,
-      [key, customer.id, "pay_per_signal"]
-    );
-    apiKeys[key] = { customerId: customer.id, plan: "pay_per_signal" };
-    res.json({ api_key: key, plan: "pay_per_signal", email });
-  } catch (err) {
-    console.error("Full Stripe error:", JSON.stringify(err));
-    res.status(500).json({ error: err.message });
-  }
-});
 app.post("/v1/signals/subscribe", requireApiKey, async (req, res) => {
   const { url, events, webhook_url } = req.body;
   if (!url || !events) {
@@ -188,14 +147,11 @@ app.post("/v1/signals/record", requireApiKey, async (req, res) => {
     return res.status(400).json({ error: "monitor_id and event are required" });
   }
   try {
-    // Get monitor details including webhook_url
     const monitorResult = await pool.query(
       `SELECT * FROM monitors WHERE id = $1 AND api_key = $2`,
       [monitor_id, req.apiKey]
     );
     const monitor = monitorResult.rows[0];
-
-    // Bill the customer
     const customerId = req.keyData.customerId;
     if (customerId) {
       await getStripe().billing.meterEvents.create({
@@ -206,7 +162,6 @@ app.post("/v1/signals/record", requireApiKey, async (req, res) => {
         },
       });
     }
-
     const timestamp = new Date().toISOString();
     const payload = {
       event,
@@ -215,8 +170,6 @@ app.post("/v1/signals/record", requireApiKey, async (req, res) => {
       data: data || {},
       timestamp,
     };
-
-    // Fire webhook if monitor has a webhook_url
     if (monitor?.webhook_url) {
       try {
         await fetch(monitor.webhook_url, {
@@ -227,10 +180,8 @@ app.post("/v1/signals/record", requireApiKey, async (req, res) => {
         console.log(`Webhook fired to ${monitor.webhook_url}`);
       } catch (webhookErr) {
         console.error("Webhook delivery failed:", webhookErr.message);
-        // Don't fail the request if webhook fails
       }
     }
-
     res.json({
       recorded: true,
       monitor_id,
