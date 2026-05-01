@@ -135,11 +135,19 @@ app.delete("/v1/signals/:id", requireApiKey, async (req, res) => {
 });
 
 app.post("/v1/signals/record", requireApiKey, async (req, res) => {
-  const { monitor_id, event } = req.body;
+  const { monitor_id, event, data } = req.body;
   if (!monitor_id || !event) {
     return res.status(400).json({ error: "monitor_id and event are required" });
   }
   try {
+    // Get monitor details including webhook_url
+    const monitorResult = await pool.query(
+      `SELECT * FROM monitors WHERE id = $1 AND api_key = $2`,
+      [monitor_id, req.apiKey]
+    );
+    const monitor = monitorResult.rows[0];
+
+    // Bill the customer
     const customerId = req.keyData.customerId;
     if (customerId) {
       await getStripe().billing.meterEvents.create({
@@ -150,15 +158,41 @@ app.post("/v1/signals/record", requireApiKey, async (req, res) => {
         },
       });
     }
+
+    const timestamp = new Date().toISOString();
+    const payload = {
+      event,
+      monitor_id,
+      url: monitor?.url,
+      data: data || {},
+      timestamp,
+    };
+
+    // Fire webhook if monitor has a webhook_url
+    if (monitor?.webhook_url) {
+      try {
+        await fetch(monitor.webhook_url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        console.log(`Webhook fired to ${monitor.webhook_url}`);
+      } catch (webhookErr) {
+        console.error("Webhook delivery failed:", webhookErr.message);
+        // Don't fail the request if webhook fails
+      }
+    }
+
     res.json({
       recorded: true,
       monitor_id,
       event,
-      timestamp: new Date().toISOString(),
+      timestamp,
       billed: !!customerId,
+      webhook_fired: !!monitor?.webhook_url,
     });
   } catch (err) {
-    console.error("Stripe error:", err.message);
+    console.error("Error:", err.message);
     res.status(500).json({ error: "Failed to record signal" });
   }
 });
