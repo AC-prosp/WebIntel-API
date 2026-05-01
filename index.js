@@ -78,13 +78,28 @@ app.post("/v1/keys/generate", async (req, res) => {
   if (!email) {
     return res.status(400).json({ error: "email is required" });
   }
-  const key = "wi_" + Math.random().toString(36).substr(2, 9) + Math.random().toString(36).substr(2, 9);
-  await pool.query(
-    `INSERT INTO api_keys (key, plan) VALUES ($1, $2)`,
-    [key, "pay_per_signal"]
-  );
-  apiKeys[key] = { customerId: null, plan: "pay_per_signal" };
-  res.json({ api_key: key, plan: "pay_per_signal", email });
+  try {
+    // Create a Stripe customer
+    const customer = await getStripe().customers.create({ email });
+
+    // Create a Stripe subscription for pay-per-signal
+    await getStripe().subscriptions.create({
+      customer: customer.id,
+      items: [{ price: process.env.STRIPE_PRICE_ID }],
+    });
+
+    // Generate API key and store with Stripe customer ID
+    const key = "wi_" + Math.random().toString(36).substr(2, 9) + Math.random().toString(36).substr(2, 9);
+    await pool.query(
+      `INSERT INTO api_keys (key, customer_id, plan) VALUES ($1, $2, $3)`,
+      [key, customer.id, "pay_per_signal"]
+    );
+    apiKeys[key] = { customerId: customer.id, plan: "pay_per_signal" };
+    res.json({ api_key: key, plan: "pay_per_signal", email });
+  } catch (err) {
+    console.error("Full Stripe error:", JSON.stringify(err));
+    res.status(500).json({ error: err.message });
+  }
 });
 app.post("/v1/signals/subscribe", requireApiKey, async (req, res) => {
   const { url, events, webhook_url } = req.body;
