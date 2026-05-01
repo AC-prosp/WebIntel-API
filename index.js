@@ -17,9 +17,26 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const apiKeys = {
-  "test_key_123": { customerId: null, plan: "pay_per_signal" }
-};
+const apiKeys = {};
+
+// Load API keys from database into memory on startup
+async function loadApiKeys() {
+  const result = await pool.query(`
+    CREATE TABLE IF NOT EXISTS api_keys (
+      key TEXT PRIMARY KEY,
+      customer_id TEXT,
+      plan TEXT DEFAULT 'pay_per_signal',
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  const keys = await pool.query(`SELECT * FROM api_keys`);
+  keys.rows.forEach(row => {
+    apiKeys[row.key] = { customerId: row.customer_id, plan: row.plan };
+  });
+  // Always keep test key available
+  apiKeys["test_key_123"] = { customerId: null, plan: "pay_per_signal" };
+  console.log(`Loaded ${keys.rows.length} API keys from database`);
+}
 
 // Create tables if they don't exist
 async function initDb() {
@@ -35,6 +52,7 @@ async function initDb() {
     )
   `);
   console.log("Database ready");
+  await loadApiKeys();
 }
 
 function requireApiKey(req, res, next) {
@@ -54,7 +72,20 @@ function requireApiKey(req, res, next) {
 app.get("/", (req, res) => {
   res.json({ status: "Webintel API is running" });
 });
-
+// Generate a new API key
+app.post("/v1/keys/generate", async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: "email is required" });
+  }
+  const key = "wi_" + Math.random().toString(36).substr(2, 9) + Math.random().toString(36).substr(2, 9);
+  await pool.query(
+    `INSERT INTO api_keys (key, plan) VALUES ($1, $2)`,
+    [key, "pay_per_signal"]
+  );
+  apiKeys[key] = { customerId: null, plan: "pay_per_signal" };
+  res.json({ api_key: key, plan: "pay_per_signal", email });
+});
 app.post("/v1/signals/subscribe", requireApiKey, async (req, res) => {
   const { url, events, webhook_url } = req.body;
   if (!url || !events) {
