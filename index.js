@@ -85,23 +85,51 @@ app.post("/v1/keys/generate", async (req, res) => {
   if (!validPlans.includes(selectedPlan)) {
     return res.status(400).json({ error: "Invalid plan. Choose: pay_per_signal, starter, pro" });
   }
+
   try {
-    const customer = await getStripe().customers.create({ email });
-    let priceId;
-    if (selectedPlan === "starter") priceId = process.env.STRIPE_PRICE_STARTER;
-    if (selectedPlan === "pro") priceId = process.env.STRIPE_PRICE_PRO;
-    if (selectedPlan === "pay_per_signal") priceId = process.env.STRIPE_PRICE_ID;
-    await getStripe().subscriptions.create({
-      customer: customer.id,
-      items: [{ price: priceId }],
-    });
     const key = "wi_" + Math.random().toString(36).substr(2, 9) + Math.random().toString(36).substr(2, 9);
-    await pool.query(
-      `INSERT INTO api_keys (key, customer_id, plan) VALUES ($1, $2, $3)`,
-      [key, customer.id, selectedPlan]
-    );
-    apiKeys[key] = { customerId: customer.id, plan: selectedPlan };
-    res.json({ api_key: key, plan: selectedPlan, email });
+
+    if (selectedPlan === "pay_per_signal") {
+      const customer = await getStripe().customers.create({ email });
+      await getStripe().subscriptions.create({
+        customer: customer.id,
+        items: [{ price: process.env.STRIPE_PRICE_ID }],
+      });
+      await pool.query(
+        `INSERT INTO api_keys (key, customer_id, plan) VALUES ($1, $2, $3)`,
+        [key, customer.id, selectedPlan]
+      );
+      apiKeys[key] = { customerId: customer.id, plan: selectedPlan };
+      res.json({ api_key: key, plan: selectedPlan, email });
+
+    } else {
+      let priceId;
+      if (selectedPlan === "starter") priceId = process.env.STRIPE_PRICE_STARTER;
+      if (selectedPlan === "pro") priceId = process.env.STRIPE_PRICE_PRO;
+
+      await pool.query(
+        `INSERT INTO api_keys (key, customer_id, plan) VALUES ($1, $2, $3)`,
+        [key, null, selectedPlan]
+      );
+      apiKeys[key] = { customerId: null, plan: selectedPlan };
+
+      const session = await getStripe().checkout.sessions.create({
+        mode: "subscription",
+        customer_email: email,
+        line_items: [{ price: priceId, quantity: 1 }],
+        success_url: `https://webintel.io?key=${key}&plan=${selectedPlan}`,
+        cancel_url: `https://webintel.io?cancelled=true`,
+        metadata: { api_key: key }
+      });
+
+      res.json({
+        api_key: key,
+        plan: selectedPlan,
+        email,
+        checkout_url: session.url,
+        message: "Complete payment to activate your subscription"
+      });
+    }
   } catch (err) {
     console.error("Full error:", JSON.stringify(err));
     res.status(500).json({ error: err.message });
