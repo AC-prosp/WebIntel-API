@@ -28,7 +28,6 @@
     overflow-x: hidden;
   }
 
-  /* Grid background */
   body::before {
     content: '';
     position: fixed;
@@ -41,7 +40,6 @@
     z-index: 0;
   }
 
-  /* Glow */
   body::after {
     content: '';
     position: fixed;
@@ -100,7 +98,6 @@
 
   .btn-nav:hover { opacity: 0.9; }
 
-  /* Hero */
   .hero {
     position: relative;
     z-index: 1;
@@ -210,7 +207,6 @@
     color: var(--accent);
   }
 
-  /* Install command */
   .install-box {
     margin-top: 56px;
     display: flex;
@@ -228,7 +224,6 @@
   }
 
   .install-box:hover { border-color: rgba(0,229,160,0.3); }
-
   .install-box .prompt { color: var(--accent); }
   .install-box .cmd { color: var(--text); }
   .install-box .copy-btn {
@@ -248,7 +243,6 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
-  /* Code demo */
   .demo-section {
     position: relative;
     z-index: 1;
@@ -311,7 +305,6 @@
   .c-accent { color: var(--accent); }
   .c-num { color: #fbbf24; }
 
-  /* Events */
   .events-section {
     position: relative;
     z-index: 1;
@@ -339,25 +332,10 @@
     transform: translateY(-2px);
   }
 
-  .event-icon {
-    font-size: 28px;
-    margin-bottom: 12px;
-  }
+  .event-icon { font-size: 28px; margin-bottom: 12px; }
+  .event-name { font-family: var(--mono); font-size: 13px; color: var(--accent); margin-bottom: 8px; }
+  .event-desc { font-size: 14px; color: var(--muted); line-height: 1.5; }
 
-  .event-name {
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--accent);
-    margin-bottom: 8px;
-  }
-
-  .event-desc {
-    font-size: 14px;
-    color: var(--muted);
-    line-height: 1.5;
-  }
-
-  /* How it works */
   .how-section {
     position: relative;
     z-index: 1;
@@ -391,20 +369,9 @@
     right: 20px;
   }
 
-  .step h3 {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 12px;
-  }
+  .step h3 { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+  .step p { font-family: var(--mono); font-size: 13px; color: var(--muted); line-height: 1.7; }
 
-  .step p {
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--muted);
-    line-height: 1.7;
-  }
-
-  /* Pricing */
   .pricing-section {
     position: relative;
     z-index: 1;
@@ -451,44 +418,13 @@
     margin-bottom: 4px;
   }
 
-  .price-amount span {
-    font-size: 14px;
-    font-weight: 400;
-    color: var(--muted);
-    letter-spacing: 0;
-  }
+  .price-amount span { font-size: 14px; font-weight: 400; color: var(--muted); letter-spacing: 0; }
+  .price-desc { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
 
-  .price-desc {
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--muted);
-    margin-bottom: 28px;
-    line-height: 1.6;
-  }
+  .price-features { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .price-features li { font-family: var(--mono); font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 10px; }
+  .price-features li::before { content: '✓'; color: var(--accent); font-weight: 700; }
 
-  .price-features {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .price-features li {
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--muted);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .price-features li::before {
-    content: '✓';
-    color: var(--accent);
-    font-weight: 700;
-  }
-
-  /* CTA */
   .cta-section {
     position: relative;
     z-index: 1;
@@ -496,19 +432,8 @@
     padding: 120px 24px;
   }
 
-  .cta-section h2 {
-    font-size: clamp(36px, 5vw, 64px);
-    font-weight: 800;
-    letter-spacing: -2px;
-    margin-bottom: 24px;
-  }
-
-  .cta-section p {
-    font-family: var(--mono);
-    font-size: 15px;
-    color: var(--muted);
-    margin-bottom: 40px;
-  }
+  .cta-section h2 { font-size: clamp(36px, 5vw, 64px); font-weight: 800; letter-spacing: -2px; margin-bottom: 24px; }
+  .cta-section p { font-family: var(--mono); font-size: 15px; color: var(--muted); margin-bottom: 40px; }
 
   footer {
     position: relative;
@@ -520,13 +445,8 @@
     align-items: center;
   }
 
-  footer p {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--muted);
-  }
+  footer p { font-family: var(--mono); font-size: 12px; color: var(--muted); }
 
-  /* Modal */
   .modal-overlay {
     display: none;
     position: fixed;
@@ -550,19 +470,8 @@
     position: relative;
   }
 
-  .modal h3 {
-    font-size: 24px;
-    font-weight: 800;
-    margin-bottom: 8px;
-  }
-
-  .modal p {
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--muted);
-    margin-bottom: 28px;
-    line-height: 1.6;
-  }
+  .modal h3 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+  .modal p { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
 
   .modal input {
     width: 100%;
@@ -591,6 +500,35 @@
     font-family: var(--mono);
   }
 
+  .plan-selector {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .plan-btn {
+    flex: 1;
+    padding: 10px 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    line-height: 1.4;
+  }
+
+  .plan-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .plan-btn span { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .plan-btn.active span { color: var(--muted); }
+
   .result-box {
     display: none;
     background: var(--bg);
@@ -601,25 +539,11 @@
   }
 
   .result-box.active { display: block; }
-
-  .result-box p {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--muted);
-    margin-bottom: 8px;
-  }
-
-  .result-box .key {
-    font-family: var(--mono);
-    font-size: 14px;
-    color: var(--accent);
-    word-break: break-all;
-  }
+  .result-box p { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .result-box .key { font-family: var(--mono); font-size: 14px; color: var(--accent); word-break: break-all; }
 
   @media (max-width: 768px) {
-    .demo-grid, .events-grid, .steps, .pricing-grid {
-      grid-template-columns: 1fr;
-    }
+    .demo-grid, .events-grid, .steps, .pricing-grid { grid-template-columns: 1fr; }
     nav { padding: 16px 20px; }
     .nav-right a:not(.btn-nav) { display: none; }
     h1 { letter-spacing: -2px; }
@@ -634,7 +558,7 @@
     <a href="#how">How it works</a>
     <a href="#pricing">Pricing</a>
     <a href="https://api.webintel.io/openapi.json" target="_blank">API</a>
-    <a href="#" class="btn-nav" onclick="openModal()">Get API Key</a>
+    <a href="#" class="btn-nav" onclick="openModal(); return false;">Get API Key</a>
   </div>
 </nav>
 
@@ -643,7 +567,7 @@
   <h1>Price & stock signals.<br><em>Instant. Clean. Billable.</em></h1>
   <p class="subtitle">Infrastructure for developers and AI agents to detect real price changes and stock events — without scraping.</p>
   <div class="hero-actions">
-    <a href="#" class="btn-primary" onclick="openModal()">Get your API key free</a>
+    <a href="#" class="btn-primary" onclick="openModal(); return false;">Get your API key free</a>
     <a href="https://api.webintel.io/openapi.json" class="btn-secondary" target="_blank">View OpenAPI spec →</a>
   </div>
   <div class="install-box" onclick="copyInstall(this)">
@@ -779,7 +703,7 @@
 <section class="cta-section">
   <h2>Start in 60 seconds.<br><em style="color:var(--accent)">No signup required.</em></h2>
   <p>Get your API key instantly. Pay only for signals you use.</p>
-  <a href="#" class="btn-primary" onclick="openModal()">Get your free API key →</a>
+  <a href="#" class="btn-primary" onclick="openModal(); return false;">Get your free API key →</a>
 </section>
 
 <footer>
@@ -792,9 +716,26 @@
   <div class="modal">
     <button class="modal-close" onclick="closeModal()">✕</button>
     <h3>Get your API key</h3>
-    <p>Enter your email to generate an API key instantly. No password. No credit card upfront. Pay $0.003 per signal.</p>
+    <p>Choose a plan and enter your email. Pay per signal or subscribe for volume discounts.</p>
+
+    <div class="plan-selector">
+      <button class="plan-btn active" id="plan-pay" onclick="setPlan('pay_per_signal', this)">
+        Pay as you go
+        <span>$0.003/signal</span>
+      </button>
+      <button class="plan-btn" id="plan-starter" onclick="setPlan('starter', this)">
+        Starter
+        <span>$9/month</span>
+      </button>
+      <button class="plan-btn" id="plan-pro" onclick="setPlan('pro', this)">
+        Pro
+        <span>$29/month</span>
+      </button>
+    </div>
+
     <input type="email" id="email-input" placeholder="you@example.com" />
-    <button class="btn-primary" style="width:100%" onclick="generateKey()">Generate API key</button>
+    <button class="btn-primary" id="generate-btn" style="width:100%" onclick="generateKey()">Get API key</button>
+
     <div class="result-box" id="result-box">
       <p>Your API key (save this — it won't be shown again):</p>
       <div class="key" id="result-key"></div>
@@ -803,22 +744,31 @@
 </div>
 
 <script>
+  let selectedPlan = 'pay_per_signal';
+
+  function setPlan(plan, btn) {
+    selectedPlan = plan;
+    document.querySelectorAll('.plan-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
   function openModal() {
     document.getElementById('modal').classList.add('active');
-    return false;
   }
 
   function closeModal() {
     document.getElementById('modal').classList.remove('active');
     document.getElementById('result-box').classList.remove('active');
     document.getElementById('email-input').value = '';
+    document.getElementById('generate-btn').textContent = 'Get API key';
+    document.getElementById('generate-btn').disabled = false;
   }
 
   async function generateKey() {
     const email = document.getElementById('email-input').value;
     if (!email) { alert('Please enter your email'); return; }
 
-    const btn = event.target;
+    const btn = document.getElementById('generate-btn');
     btn.textContent = 'Generating...';
     btn.disabled = true;
 
@@ -826,15 +776,22 @@
       const res = await fetch('https://api.webintel.io/v1/keys/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email, plan: selectedPlan })
       });
       const data = await res.json();
-      document.getElementById('result-key').textContent = data.api_key;
-      document.getElementById('result-box').classList.add('active');
-      btn.textContent = 'Done!';
+
+      if (data.checkout_url) {
+        // Redirect to Stripe checkout for paid plans
+        window.location.href = data.checkout_url;
+      } else {
+        // Show API key for pay-per-signal
+        document.getElementById('result-key').textContent = data.api_key;
+        document.getElementById('result-box').classList.add('active');
+        btn.textContent = 'Done!';
+      }
     } catch (err) {
       alert('Something went wrong. Please try again.');
-      btn.textContent = 'Generate API key';
+      btn.textContent = 'Get API key';
       btn.disabled = false;
     }
   }
@@ -848,6 +805,18 @@
   document.getElementById('modal').addEventListener('click', function(e) {
     if (e.target === this) closeModal();
   });
+
+  // Handle success return from Stripe
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('key')) {
+    setTimeout(() => {
+      openModal();
+      document.getElementById('result-key').textContent = params.get('key');
+      document.getElementById('result-box').classList.add('active');
+      document.getElementById('generate-btn').style.display = 'none';
+      document.querySelector('.modal p').textContent = 'Payment successful! Here is your API key:';
+    }, 500);
+  }
 </script>
 </body>
 </html>
