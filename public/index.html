@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webintel — Real-time Price & Stock Signals</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #08090a;
+    --surface: #111214;
+    --border: #1e2025;
+    --accent: #00e5a0;
+    --accent-dim: rgba(0,229,160,0.12);
+    --text: #e8eaed;
+    --muted: #6b7280;
+    --mono: 'DM Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,160,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,160,0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glow */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(0,229,160,0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: rgba(8,9,10,0.8);
+    backdrop-filter: blur(12px);
+  }
+
+  .logo {
+    font-family: var(--mono);
+    font-size: 18px;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+
+  .logo span { color: var(--muted); }
+
+  nav a {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  nav a:hover { color: var(--accent); }
+
+  .nav-right { display: flex; gap: 32px; align-items: center; }
+
+  .btn-nav {
+    background: var(--accent);
+    color: #000 !important;
+    padding: 8px 20px;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 13px !important;
+  }
+
+  .btn-nav:hover { opacity: 0.9; }
+
+  /* Hero */
+  .hero {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 120px 24px 80px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(0,229,160,0.2);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 100px;
+    margin-bottom: 40px;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  h1 {
+    font-size: clamp(48px, 8vw, 88px);
+    font-weight: 800;
+    line-height: 1.0;
+    letter-spacing: -3px;
+    max-width: 900px;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+
+  h1 em {
+    font-style: normal;
+    color: var(--accent);
+  }
+
+  .subtitle {
+    margin-top: 28px;
+    font-family: var(--mono);
+    font-size: 16px;
+    color: var(--muted);
+    max-width: 520px;
+    line-height: 1.7;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  .hero-actions {
+    margin-top: 48px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+    padding: 14px 32px;
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(0,229,160,0.3);
+  }
+
+  .btn-secondary {
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 14px;
+    text-decoration: none;
+    padding: 14px 24px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Install command */
+  .install-box {
+    margin-top: 56px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 20px;
+    font-family: var(--mono);
+    font-size: 14px;
+    animation: fadeUp 0.6s 0.4s ease both;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .install-box:hover { border-color: rgba(0,229,160,0.3); }
+
+  .install-box .prompt { color: var(--accent); }
+  .install-box .cmd { color: var(--text); }
+  .install-box .copy-btn {
+    margin-left: auto;
+    color: var(--muted);
+    font-size: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--mono);
+    transition: color 0.2s;
+  }
+  .install-box:hover .copy-btn { color: var(--accent); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Code demo */
+  .demo-section {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 80px 24px;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 48px;
+  }
+
+  .demo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    background: var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .code-panel {
+    background: var(--surface);
+    padding: 32px;
+  }
+
+  .code-panel .panel-title {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  pre {
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.8;
+    overflow-x: auto;
+  }
+
+  .c-comment { color: #4b5563; }
+  .c-keyword { color: #c084fc; }
+  .c-string { color: #86efac; }
+  .c-func { color: #67e8f9; }
+  .c-accent { color: var(--accent); }
+  .c-num { color: #fbbf24; }
+
+  /* Events */
+  .events-section {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 80px 24px;
+  }
+
+  .events-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .event-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    transition: all 0.2s;
+  }
+
+  .event-card:hover {
+    border-color: rgba(0,229,160,0.3);
+    transform: translateY(-2px);
+  }
+
+  .event-icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+
+  .event-name {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .event-desc {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* How it works */
+  .how-section {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 80px 24px;
+  }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    margin-top: 48px;
+  }
+
+  .step {
+    position: relative;
+    padding: 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+
+  .step-num {
+    font-family: var(--mono);
+    font-size: 48px;
+    font-weight: 800;
+    color: var(--border);
+    position: absolute;
+    top: 16px;
+    right: 20px;
+  }
+
+  .step h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  .step p {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  /* Pricing */
+  .pricing-section {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 80px 24px;
+  }
+
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 48px;
+  }
+
+  .price-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    transition: all 0.2s;
+  }
+
+  .price-card.featured {
+    border-color: var(--accent);
+    background: rgba(0,229,160,0.04);
+  }
+
+  .price-card:hover { transform: translateY(-2px); }
+
+  .price-name {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+  }
+
+  .price-amount {
+    font-size: 40px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    margin-bottom: 4px;
+  }
+
+  .price-amount span {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--muted);
+    letter-spacing: 0;
+  }
+
+  .price-desc {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+
+  .price-features {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .price-features li {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .price-features li::before {
+    content: '✓';
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* CTA */
+  .cta-section {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 120px 24px;
+  }
+
+  .cta-section h2 {
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 800;
+    letter-spacing: -2px;
+    margin-bottom: 24px;
+  }
+
+  .cta-section p {
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--muted);
+    margin-bottom: 40px;
+  }
+
+  footer {
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid var(--border);
+    padding: 32px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  footer p {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.active { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 40px;
+    width: 100%;
+    max-width: 460px;
+    position: relative;
+  }
+
+  .modal h3 {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+
+  .modal p {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+
+  .modal input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    margin-bottom: 16px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .modal input:focus { border-color: var(--accent); }
+
+  .modal-close {
+    position: absolute;
+    top: 16px; right: 20px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 20px;
+    cursor: pointer;
+    font-family: var(--mono);
+  }
+
+  .result-box {
+    display: none;
+    background: var(--bg);
+    border: 1px solid rgba(0,229,160,0.3);
+    border-radius: 6px;
+    padding: 16px;
+    margin-top: 16px;
+  }
+
+  .result-box.active { display: block; }
+
+  .result-box p {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .result-box .key {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--accent);
+    word-break: break-all;
+  }
+
+  @media (max-width: 768px) {
+    .demo-grid, .events-grid, .steps, .pricing-grid {
+      grid-template-columns: 1fr;
+    }
+    nav { padding: 16px 20px; }
+    .nav-right a:not(.btn-nav) { display: none; }
+    h1 { letter-spacing: -2px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">web<span>//</span>intel</div>
+  <div class="nav-right">
+    <a href="#how">How it works</a>
+    <a href="#pricing">Pricing</a>
+    <a href="https://api.webintel.io/openapi.json" target="_blank">API</a>
+    <a href="#" class="btn-nav" onclick="openModal()">Get API Key</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="badge">Now live — $0.003 per signal</div>
+  <h1>Price & stock signals.<br><em>Instant. Clean. Billable.</em></h1>
+  <p class="subtitle">Infrastructure for developers and AI agents to detect real price changes and stock events — without scraping.</p>
+  <div class="hero-actions">
+    <a href="#" class="btn-primary" onclick="openModal()">Get your API key free</a>
+    <a href="https://api.webintel.io/openapi.json" class="btn-secondary" target="_blank">View OpenAPI spec →</a>
+  </div>
+  <div class="install-box" onclick="copyInstall(this)">
+    <span class="prompt">$</span>
+    <span class="cmd">npm install webintel</span>
+    <button class="copy-btn">copy</button>
+  </div>
+</section>
+
+<section class="demo-section">
+  <div class="section-label">// quickstart</div>
+  <div class="section-title">Live in 60 seconds</div>
+  <div class="demo-grid">
+    <div class="code-panel">
+      <div class="panel-title">01 — subscribe</div>
+      <pre><span class="c-keyword">const</span> <span class="c-accent">Webintel</span> = <span class="c-func">require</span>(<span class="c-string">'webintel'</span>);
+
+<span class="c-keyword">const</span> client = <span class="c-keyword">new</span> <span class="c-accent">Webintel</span>(<span class="c-string">'wi_your_key'</span>);
+
+<span class="c-comment">// Subscribe to changes</span>
+<span class="c-keyword">await</span> client.<span class="c-func">subscribe</span>({
+  url: <span class="c-string">'https://shop.com/product'</span>,
+  events: [<span class="c-string">'price_drop'</span>, <span class="c-string">'back_in_stock'</span>],
+  webhook_url: <span class="c-string">'https://yourapp.com/hook'</span>
+});</pre>
+    </div>
+    <div class="code-panel">
+      <div class="panel-title">02 — receive signal</div>
+      <pre><span class="c-comment">// Your webhook receives:</span>
+{
+  <span class="c-string">"event"</span>: <span class="c-string">"price_drop"</span>,
+  <span class="c-string">"monitor_id"</span>: <span class="c-string">"monitor_abc"</span>,
+  <span class="c-string">"url"</span>: <span class="c-string">"https://shop.com/product"</span>,
+  <span class="c-string">"data"</span>: {
+    <span class="c-string">"old_price"</span>: <span class="c-num">120</span>,
+    <span class="c-string">"new_price"</span>: <span class="c-num">95</span>
+  },
+  <span class="c-string">"timestamp"</span>: <span class="c-string">"2026-05-01T10:00:00Z"</span>
+}</pre>
+    </div>
+  </div>
+</section>
+
+<section class="events-section" id="events">
+  <div class="section-label">// signal types</div>
+  <div class="section-title">Four events. All that matters.</div>
+  <div class="events-grid">
+    <div class="event-card">
+      <div class="event-icon">📉</div>
+      <div class="event-name">price_drop</div>
+      <div class="event-desc">Fires when a price decreases. Includes old and new values.</div>
+    </div>
+    <div class="event-card">
+      <div class="event-icon">📈</div>
+      <div class="event-name">price_increase</div>
+      <div class="event-desc">Fires when a price goes up. Track competitor movements.</div>
+    </div>
+    <div class="event-card">
+      <div class="event-icon">✅</div>
+      <div class="event-name">back_in_stock</div>
+      <div class="event-desc">Fires when an item returns to availability.</div>
+    </div>
+    <div class="event-card">
+      <div class="event-icon">🚫</div>
+      <div class="event-name">out_of_stock</div>
+      <div class="event-desc">Fires when an item becomes unavailable.</div>
+    </div>
+  </div>
+</section>
+
+<section class="how-section" id="how">
+  <div class="section-label">// how it works</div>
+  <div class="section-title">Infrastructure, not a data source</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <h3>Your app detects a change</h3>
+      <p>Your system or AI agent notices a price or stock change on a product page.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <h3>Record the signal</h3>
+      <p>Call <code style="color:var(--accent);font-family:var(--mono)">/signals/record</code> with the event. Webintel bills $0.003 and fires your webhook instantly.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <h3>React automatically</h3>
+      <p>Your webhook receives a clean structured event. Trigger repricing, alerts, or AI workflows.</p>
+    </div>
+  </div>
+</section>
+
+<section class="pricing-section" id="pricing">
+  <div class="section-label">// pricing</div>
+  <div class="section-title">Pay for what you use</div>
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="price-name">Pay as you go</div>
+      <div class="price-amount">$0.003<span> / signal</span></div>
+      <div class="price-desc">No monthly fee. No signup. Get a key and start instantly.</div>
+      <ul class="price-features">
+        <li>All 4 event types</li>
+        <li>Webhook delivery</li>
+        <li>No expiry</li>
+        <li>API + npm SDK</li>
+      </ul>
+    </div>
+    <div class="price-card featured">
+      <div class="price-name">Starter</div>
+      <div class="price-amount">$9<span> / month</span></div>
+      <div class="price-desc">Up to 5,000 signals included per month.</div>
+      <ul class="price-features">
+        <li>5,000 signals / mo</li>
+        <li>Webhook delivery</li>
+        <li>Priority support</li>
+        <li>API + npm SDK</li>
+      </ul>
+    </div>
+    <div class="price-card">
+      <div class="price-name">Pro</div>
+      <div class="price-amount">$29<span> / month</span></div>
+      <div class="price-desc">Up to 20,000 signals. Built for production apps and agents.</div>
+      <ul class="price-features">
+        <li>20,000 signals / mo</li>
+        <li>Webhook delivery</li>
+        <li>Priority support</li>
+        <li>OpenAPI / agent ready</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section">
+  <h2>Start in 60 seconds.<br><em style="color:var(--accent)">No signup required.</em></h2>
+  <p>Get your API key instantly. Pay only for signals you use.</p>
+  <a href="#" class="btn-primary" onclick="openModal()">Get your free API key →</a>
+</section>
+
+<footer>
+  <p class="logo" style="font-family:var(--mono);color:var(--accent)">web<span style="color:var(--muted)">//</span>intel</p>
+  <p>© 2026 Webintel · <a href="https://api.webintel.io/openapi.json" style="color:var(--muted);text-decoration:none">API Docs</a></p>
+</footer>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h3>Get your API key</h3>
+    <p>Enter your email to generate an API key instantly. No password. No credit card upfront. Pay $0.003 per signal.</p>
+    <input type="email" id="email-input" placeholder="you@example.com" />
+    <button class="btn-primary" style="width:100%" onclick="generateKey()">Generate API key</button>
+    <div class="result-box" id="result-box">
+      <p>Your API key (save this — it won't be shown again):</p>
+      <div class="key" id="result-key"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openModal() {
+    document.getElementById('modal').classList.add('active');
+    return false;
+  }
+
+  function closeModal() {
+    document.getElementById('modal').classList.remove('active');
+    document.getElementById('result-box').classList.remove('active');
+    document.getElementById('email-input').value = '';
+  }
+
+  async function generateKey() {
+    const email = document.getElementById('email-input').value;
+    if (!email) { alert('Please enter your email'); return; }
+
+    const btn = event.target;
+    btn.textContent = 'Generating...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('https://api.webintel.io/v1/keys/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      document.getElementById('result-key').textContent = data.api_key;
+      document.getElementById('result-box').classList.add('active');
+      btn.textContent = 'Done!';
+    } catch (err) {
+      alert('Something went wrong. Please try again.');
+      btn.textContent = 'Generate API key';
+      btn.disabled = false;
+    }
+  }
+
+  function copyInstall(el) {
+    navigator.clipboard.writeText('npm install webintel');
+    el.querySelector('.copy-btn').textContent = 'copied!';
+    setTimeout(() => el.querySelector('.copy-btn').textContent = 'copy', 2000);
+  }
+
+  document.getElementById('modal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+</script>
+</body>
+</html>
