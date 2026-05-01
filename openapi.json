@@ -1,0 +1,226 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Webintel API",
+    "version": "1.0.0",
+    "description": "Real-time price and stock change detection delivered as clean events. Built for developers and AI agents.",
+    "contact": {
+      "url": "https://webintel.io"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.webintel.io/v1",
+      "description": "Production"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/keys/generate": {
+      "post": {
+        "summary": "Generate an API key",
+        "description": "Creates a new API key and Stripe customer. No signup required.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "dev@example.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "API key created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "api_key": { "type": "string", "example": "wi_abc123" },
+                    "plan": { "type": "string", "example": "pay_per_signal" },
+                    "email": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/signals/subscribe": {
+      "post": {
+        "summary": "Create a monitor",
+        "description": "Subscribe to price or stock changes on a URL",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["url", "events"],
+                "properties": {
+                  "url": { "type": "string", "example": "https://example.com/product" },
+                  "events": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": ["price_drop", "price_increase", "back_in_stock", "out_of_stock"]
+                    }
+                  },
+                  "webhook_url": { "type": "string", "example": "https://yourapp.com/webhook" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Monitor created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string", "example": "monitor_abc123" },
+                    "status": { "type": "string", "example": "active" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/signals": {
+      "get": {
+        "summary": "List monitors",
+        "description": "Returns all active monitors for this API key",
+        "responses": {
+          "200": {
+            "description": "List of monitors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "string" },
+                      "url": { "type": "string" },
+                      "events": { "type": "array", "items": { "type": "string" } },
+                      "webhook_url": { "type": "string" },
+                      "status": { "type": "string" },
+                      "created_at": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/signals/{id}": {
+      "delete": {
+        "summary": "Delete a monitor",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Monitor deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deleted": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/signals/record": {
+      "post": {
+        "summary": "Record a signal",
+        "description": "Records a signal event, bills the customer, and fires webhooks",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["monitor_id", "event"],
+                "properties": {
+                  "monitor_id": { "type": "string", "example": "monitor_abc123" },
+                  "event": {
+                    "type": "string",
+                    "enum": ["price_drop", "price_increase", "back_in_stock", "out_of_stock"]
+                  },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "old_price": { "type": "number" },
+                      "new_price": { "type": "number" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signal recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "recorded": { "type": "boolean" },
+                    "monitor_id": { "type": "string" },
+                    "event": { "type": "string" },
+                    "timestamp": { "type": "string" },
+                    "billed": { "type": "boolean" },
+                    "webhook_fired": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Your Webintel API key"
+      }
+    }
+  }
+}

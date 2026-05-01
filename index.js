@@ -70,7 +70,15 @@ function requireApiKey(req, res, next) {
 }
 
 app.get("/", (req, res) => {
-  res.json({ status: "Webintel API is running" });
+  res.json({ 
+    status: "Webintel API is running",
+    docs: "https://api.webintel.io/openapi.json",
+    npm: "npm install webintel"
+  });
+});
+
+app.get("/openapi.json", (req, res) => {
+  res.sendFile(__dirname + "/openapi.json");
 });
 // Generate a new API key
 app.post("/v1/keys/generate", async (req, res) => {
